@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Play, Zap, GitBranch, Code2, Terminal, Eye, Brain, Atom } from 'lucide-react';
+import { Play, Zap, GitBranch, Code2, Terminal, Eye, Brain, Atom, MessageSquare } from 'lucide-react';
 import MetricsPanel from '@/components/MetricsPanel';
 import IntentParser from '@/components/IntentParser';
 import CollapseVisualizer from '@/components/CollapseVisualizer';
@@ -53,21 +53,35 @@ const Index = () => {
       </div>
 
       {/* Main Interface */}
-      <div className="container mx-auto px-6 py-6">
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="flex h-[calc(100vh-120px)]">
+        
+        {/* Left Sidebar - Chat Interface */}
+        <div className="w-80 bg-slate-950/30 border-r border-slate-800 flex flex-col">
+          <div className="p-4 border-b border-slate-800">
+            <div className="flex items-center space-x-2">
+              <MessageSquare className="h-5 w-5 text-cyan-400" />
+              <h3 className="text-lg font-semibold">AI Assistant</h3>
+              <Badge variant="outline" className="border-green-400/30 text-green-400">
+                Online
+              </Badge>
+            </div>
+          </div>
           
-          {/* Left Column - Intent & Control */}
-          <div className="xl:col-span-1 space-y-6">
+          <div className="flex-1 overflow-y-auto p-4">
             <IntentParser onIntentParsed={setActiveIntent} />
           </div>
+        </div>
 
-          {/* Center Column - Live Preview with Tabs */}
-          <div className="xl:col-span-1 space-y-6">
+        {/* Right Side - Preview and Metrics */}
+        <div className="flex-1 flex flex-col">
+          
+          {/* Main Preview Area */}
+          <div className="flex-1 p-6">
             <CollapseVisualizer activeIntent={activeIntent} />
           </div>
 
-          {/* Right Column - Metrics & Terminal */}
-          <div className="xl:col-span-1 space-y-6">
+          {/* Bottom Panel - Metrics and Terminal */}
+          <div className="h-80 border-t border-slate-800 p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-y-auto">
             <MetricsPanel />
             
             <Card className="bg-slate-900/50 border-slate-700 p-6">
@@ -75,7 +89,7 @@ const Index = () => {
                 <Terminal className="h-5 w-5 text-green-400" />
                 <h3 className="text-lg font-semibold">Sandbox Terminal</h3>
               </div>
-              <div className="bg-black rounded-lg p-4 font-mono text-sm h-64 overflow-y-auto">
+              <div className="bg-black rounded-lg p-4 font-mono text-sm h-48 overflow-y-auto">
                 <div className="text-green-400">
                   darwin-forge@sandbox:~$ mount_tmpfs("/workspace")<br/>
                   Mounted tmpfs at /workspace (512MiB)<br/>
