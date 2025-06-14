@@ -12,9 +12,23 @@ const GeneratedAppPreview: React.FC<GeneratedAppPreviewProps> = ({ appCode, devi
 
   useEffect(() => {
     try {
+      console.log('Attempting to render code:', appCode.substring(0, 200) + '...');
+      
+      // Clean the code before execution
+      let cleanCode = appCode.trim();
+      
+      // Remove any markdown code blocks if they exist
+      cleanCode = cleanCode.replace(/```(?:typescript|tsx|jsx|javascript)?\s*/g, '');
+      cleanCode = cleanCode.replace(/```\s*$/g, '');
+      
+      // Ensure we have a proper React component
+      if (!cleanCode.includes('GeneratedApp')) {
+        throw new Error('No GeneratedApp component found in code');
+      }
+      
       // Create a function that returns the component
       const createComponent = new Function('React', `
-        ${appCode}
+        ${cleanCode}
         return GeneratedApp;
       `);
       
@@ -23,7 +37,7 @@ const GeneratedAppPreview: React.FC<GeneratedAppPreviewProps> = ({ appCode, devi
       setError(null);
     } catch (err) {
       console.error('Failed to create component:', err);
-      setError('Failed to render generated app');
+      setError(`Failed to render: ${err.message}`);
       setAppComponent(null);
     }
   }, [appCode]);
@@ -39,7 +53,7 @@ const GeneratedAppPreview: React.FC<GeneratedAppPreviewProps> = ({ appCode, devi
   if (error) {
     return (
       <div className={`${getDeviceClass()} bg-slate-950 rounded-lg overflow-hidden flex items-center justify-center`}>
-        <div className="text-center text-red-400">
+        <div className="text-center text-red-400 p-4">
           <p className="text-sm">⚠ Render Error</p>
           <p className="text-xs text-slate-500 mt-1">{error}</p>
         </div>
