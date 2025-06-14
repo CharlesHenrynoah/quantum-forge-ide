@@ -6,11 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Play, Zap, GitBranch, Code2, Terminal, Eye, Brain, Atom } from 'lucide-react';
-import EvolutionGraph from '@/components/EvolutionGraph';
 import MetricsPanel from '@/components/MetricsPanel';
 import IntentParser from '@/components/IntentParser';
 import CollapseVisualizer from '@/components/CollapseVisualizer';
-import ArchiveExplorer from '@/components/ArchiveExplorer';
 
 const Index = () => {
   const [isEvolutionRunning, setIsEvolutionRunning] = useState(false);
@@ -61,25 +59,10 @@ const Index = () => {
           {/* Left Column - Intent & Control */}
           <div className="xl:col-span-1 space-y-6">
             <IntentParser onIntentParsed={setActiveIntent} />
-            <ArchiveExplorer />
           </div>
 
-          {/* Center Column - Evolution Visualization */}
+          {/* Center Column - Live Preview with Tabs */}
           <div className="xl:col-span-1 space-y-6">
-            <Card className="bg-slate-900/50 border-slate-700 p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <GitBranch className="h-5 w-5 text-purple-400" />
-                <h3 className="text-lg font-semibold">Evolution Tree</h3>
-                {isEvolutionRunning && (
-                  <div className="flex items-center space-x-1">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm text-green-400">Active</span>
-                  </div>
-                )}
-              </div>
-              <EvolutionGraph isRunning={isEvolutionRunning} />
-            </Card>
-
             <CollapseVisualizer activeIntent={activeIntent} />
           </div>
 
