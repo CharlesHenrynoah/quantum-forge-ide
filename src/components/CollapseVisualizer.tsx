@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -152,7 +153,7 @@ const CollapseVisualizer = ({ activeIntent }) => {
             ) : (
               <>
                 <Zap className="h-4 w-4 mr-2" />
-                Generate App
+                Regenerate
               </>
             )}
           </Button>
