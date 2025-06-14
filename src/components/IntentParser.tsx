@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Zap, Code2, Sparkles } from 'lucide-react';
-import { parseIntentWithGemini } from '@/services/geminiService';
+import { parseIntentWithGemini, generateAppCodeWithGemini } from '@/services/geminiService';
 
 const IntentParser = ({ onIntentParsed }) => {
   const [prompt, setPrompt] = useState('');
@@ -13,7 +13,7 @@ const IntentParser = ({ onIntentParsed }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState('');
 
-  const handleParseIntent = async () => {
+  const handleGenerateApp = async () => {
     if (!prompt.trim()) return;
     
     setIsProcessing(true);
@@ -32,6 +32,11 @@ const IntentParser = ({ onIntentParsed }) => {
       setParsedIntent(intent);
       onIntentParsed?.(intent);
       console.log('Parsed Intent:', intent);
+      
+      // Automatically generate the app after parsing
+      setProcessingStep('Generating app code...');
+      await generateAppCodeWithGemini(intent);
+      
     } catch (error) {
       console.error('Intent parsing failed:', error);
       // Fallback to basic parsing if Gemini fails
@@ -74,19 +79,19 @@ const IntentParser = ({ onIntentParsed }) => {
         />
         
         <Button 
-          onClick={handleParseIntent}
+          onClick={handleGenerateApp}
           disabled={!prompt.trim() || isProcessing}
           className="w-full bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700"
         >
           {isProcessing ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              {processingStep || 'Parsing Intent...'}
+              {processingStep || 'Generating App...'}
             </>
           ) : (
             <>
               <Zap className="h-4 w-4 mr-2" />
-              Parse Intent → DSL
+              Generate App
             </>
           )}
         </Button>

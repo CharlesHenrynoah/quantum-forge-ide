@@ -8,7 +8,6 @@ import IntentParser from '@/components/IntentParser';
 import CollapseVisualizer from '@/components/CollapseVisualizer';
 
 const Index = () => {
-  const [isEvolutionRunning, setIsEvolutionRunning] = useState(false);
   const [currentGeneration, setCurrentGeneration] = useState(0);
   const [activeIntent, setActiveIntent] = useState(null);
 
@@ -34,16 +33,6 @@ const Index = () => {
               <div className="text-sm text-slate-400">
                 Gen {currentGeneration} • Archive: 1,247 nodes
               </div>
-              <Button 
-                onClick={() => setIsEvolutionRunning(!isEvolutionRunning)}
-                className={`${isEvolutionRunning ? 'bg-red-600 hover:bg-red-700' : 'bg-cyan-600 hover:bg-cyan-700'}`}
-              >
-                {isEvolutionRunning ? (
-                  <>⏹ Stop Evolution</>
-                ) : (
-                  <>▶ Start Evolution</>
-                )}
-              </Button>
             </div>
           </div>
         </div>
