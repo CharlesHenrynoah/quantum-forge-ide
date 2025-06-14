@@ -9,10 +9,12 @@ import ArchiveExplorer from './ArchiveExplorer';
 import GeneratedAppPreview from './GeneratedAppPreview';
 import { generateAppCodeWithGemini, evolveAppWithGemini } from '@/services/geminiService';
 
+type DeviceType = 'desktop' | 'tablet' | 'mobile';
+
 const CollapseVisualizer = ({ activeIntent }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationPhase, setGenerationPhase] = useState('idle');
-  const [previewDevice, setPreviewDevice] = useState('desktop');
+  const [previewDevice, setPreviewDevice] = useState<DeviceType>('desktop');
   const [generatedAppCode, setGeneratedAppCode] = useState('');
   const [isEvolutionRunning, setIsEvolutionRunning] = useState(false);
   const [generationHistory, setGenerationHistory] = useState([]);
@@ -100,19 +102,19 @@ const CollapseVisualizer = ({ activeIntent }) => {
           {/* Device selector */}
           <div className="flex items-center space-x-1 bg-slate-800 rounded-lg p-1">
             <button
-              onClick={() => setPreviewDevice('desktop')}
+              onClick={() => setPreviewDevice('desktop' as DeviceType)}
               className={`p-1 rounded ${previewDevice === 'desktop' ? 'bg-cyan-600' : 'hover:bg-slate-700'}`}
             >
               <Monitor className="h-3 w-3" />
             </button>
             <button
-              onClick={() => setPreviewDevice('tablet')}
+              onClick={() => setPreviewDevice('tablet' as DeviceType)}
               className={`p-1 rounded ${previewDevice === 'tablet' ? 'bg-cyan-600' : 'hover:bg-slate-700'}`}
             >
               <Tablet className="h-3 w-3" />
             </button>
             <button
-              onClick={() => setPreviewDevice('mobile')}
+              onClick={() => setPreviewDevice('mobile' as DeviceType)}
               className={`p-1 rounded ${previewDevice === 'mobile' ? 'bg-cyan-600' : 'hover:bg-slate-700'}`}
             >
               <Smartphone className="h-3 w-3" />
