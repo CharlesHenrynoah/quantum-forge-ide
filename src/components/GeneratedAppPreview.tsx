@@ -21,13 +21,18 @@ const GeneratedAppPreview: React.FC<GeneratedAppPreviewProps> = ({ appCode, devi
       cleanCode = cleanCode.replace(/```(?:typescript|tsx|jsx|javascript)?\s*/g, '');
       cleanCode = cleanCode.replace(/```\s*$/g, '');
       
+      // Remove import statements since we're not in a module context
+      cleanCode = cleanCode.replace(/import\s+.*?;/g, '');
+      
       // Ensure we have a proper React component
       if (!cleanCode.includes('GeneratedApp')) {
         throw new Error('No GeneratedApp component found in code');
       }
       
       // Create a function that returns the component
+      // We pass React as a parameter since imports are removed
       const createComponent = new Function('React', `
+        const { useState, useEffect } = React;
         ${cleanCode}
         return GeneratedApp;
       `);
