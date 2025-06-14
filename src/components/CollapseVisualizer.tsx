@@ -2,187 +2,225 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Atom, Zap, Eye } from 'lucide-react';
+import { Eye, Zap, Monitor, Smartphone, Tablet } from 'lucide-react';
 
 const CollapseVisualizer = ({ activeIntent }) => {
-  const [particles, setParticles] = useState([]);
-  const [isCollapsing, setIsCollapsing] = useState(false);
-  const [collapsePhase, setCollapsePhase] = useState('idle');
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationPhase, setGenerationPhase] = useState('idle');
+  const [previewDevice, setPreviewDevice] = useState('desktop');
+  const [appPreview, setAppPreview] = useState(null);
 
-  const generateParticles = () => {
-    const newParticles = Array.from({ length: 20 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 300,
-      y: Math.random() * 200,
-      vx: (Math.random() - 0.5) * 2,
-      vy: (Math.random() - 0.5) * 2,
-      size: Math.random() * 4 + 2,
-      color: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b'][Math.floor(Math.random() * 4)]
-    }));
-    setParticles(newParticles);
-  };
-
-  const startCollapse = () => {
+  const generatePreview = () => {
     if (!activeIntent) return;
     
-    setIsCollapsing(true);
-    setCollapsePhase('preparation');
-    generateParticles();
+    setIsGenerating(true);
+    setGenerationPhase('analyzing');
     
-    setTimeout(() => setCollapsePhase('convergence'), 1000);
-    setTimeout(() => setCollapsePhase('collapse'), 2500);
+    setTimeout(() => setGenerationPhase('designing'), 1000);
+    setTimeout(() => setGenerationPhase('rendering'), 2500);
     setTimeout(() => {
-      setCollapsePhase('materialization');
-      setIsCollapsing(false);
+      setGenerationPhase('complete');
+      setIsGenerating(false);
+      
+      // Generate mock preview based on intent
+      const mockPreview = {
+        title: activeIntent.name || 'Generated App',
+        components: generateMockComponents(activeIntent),
+        theme: 'dark'
+      };
+      setAppPreview(mockPreview);
     }, 4000);
   };
 
-  useEffect(() => {
-    if (!isCollapsing) return;
+  const generateMockComponents = (intent) => {
+    const components = [];
     
-    const interval = setInterval(() => {
-      setParticles(prev => prev.map(particle => {
-        let newX = particle.x;
-        let newY = particle.y;
-        let newVx = particle.vx;
-        let newVy = particle.vy;
-        
-        if (collapsePhase === 'convergence' || collapsePhase === 'collapse') {
-          // Pull particles toward center
-          const centerX = 150;
-          const centerY = 100;
-          const dx = centerX - particle.x;
-          const dy = centerY - particle.y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          
-          if (distance > 5) {
-            const force = collapsePhase === 'collapse' ? 0.3 : 0.1;
-            newVx += (dx / distance) * force;
-            newVy += (dy / distance) * force;
-          }
-        }
-        
-        newX += newVx;
-        newY += newVy;
-        
-        // Boundary checking
-        if (newX <= 0 || newX >= 300) newVx *= -0.8;
-        if (newY <= 0 || newY >= 200) newVy *= -0.8;
-        
-        return {
-          ...particle,
-          x: Math.max(0, Math.min(300, newX)),
-          y: Math.max(0, Math.min(200, newY)),
-          vx: newVx * 0.99, // Friction
-          vy: newVy * 0.99
-        };
-      }));
-    }, 50);
+    // Header
+    components.push({
+      type: 'header',
+      content: intent.name || 'App Dashboard'
+    });
     
-    return () => clearInterval(interval);
-  }, [isCollapsing, collapsePhase]);
+    // Navigation based on features
+    if (intent.features?.includes('Authentication')) {
+      components.push({
+        type: 'nav',
+        items: ['Dashboard', 'Profile', 'Settings', 'Logout']
+      });
+    }
+    
+    // Main content based on entities
+    if (intent.entities?.includes('Dashboard')) {
+      components.push({
+        type: 'dashboard',
+        widgets: ['Stats', 'Charts', 'Recent Activity']
+      });
+    }
+    
+    if (intent.features?.includes('CRUD Operations')) {
+      components.push({
+        type: 'table',
+        columns: ['ID', 'Name', 'Status', 'Actions']
+      });
+    }
+    
+    return components;
+  };
+
+  const getDeviceClass = () => {
+    switch (previewDevice) {
+      case 'mobile': return 'w-64 h-96';
+      case 'tablet': return 'w-80 h-96';
+      default: return 'w-full h-full';
+    }
+  };
 
   return (
     <Card className="bg-slate-900/50 border-slate-700 p-6">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
-          <Atom className="h-5 w-5 text-purple-400" />
-          <h3 className="text-lg font-semibold">Quantum Collapse</h3>
+          <Eye className="h-5 w-5 text-cyan-400" />
+          <h3 className="text-lg font-semibold">Live Preview</h3>
         </div>
         
-        <Button
-          onClick={startCollapse}
-          disabled={!activeIntent || isCollapsing}
-          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
-        >
-          {isCollapsing ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Collapsing...
-            </>
-          ) : (
-            <>
-              <Zap className="h-4 w-4 mr-2" />
-              Trigger Collapse
-            </>
-          )}
-        </Button>
+        <div className="flex items-center space-x-2">
+          {/* Device selector */}
+          <div className="flex items-center space-x-1 bg-slate-800 rounded-lg p-1">
+            <button
+              onClick={() => setPreviewDevice('desktop')}
+              className={`p-1 rounded ${previewDevice === 'desktop' ? 'bg-cyan-600' : 'hover:bg-slate-700'}`}
+            >
+              <Monitor className="h-3 w-3" />
+            </button>
+            <button
+              onClick={() => setPreviewDevice('tablet')}
+              className={`p-1 rounded ${previewDevice === 'tablet' ? 'bg-cyan-600' : 'hover:bg-slate-700'}`}
+            >
+              <Tablet className="h-3 w-3" />
+            </button>
+            <button
+              onClick={() => setPreviewDevice('mobile')}
+              className={`p-1 rounded ${previewDevice === 'mobile' ? 'bg-cyan-600' : 'hover:bg-slate-700'}`}
+            >
+              <Smartphone className="h-3 w-3" />
+            </button>
+          </div>
+          
+          <Button
+            onClick={generatePreview}
+            disabled={!activeIntent || isGenerating}
+            className="bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-700 hover:to-purple-700"
+          >
+            {isGenerating ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Generating...
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4 mr-2" />
+                Generate Preview
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
-      <div className="relative h-52 bg-black rounded-lg overflow-hidden">
-        <svg className="w-full h-full">
-          {/* Quantum field background */}
-          <defs>
-            <radialGradient id="quantumField" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="#1e1b4b" stopOpacity="0.3" />
-            </radialGradient>
-          </defs>
-          <rect width="100%" height="100%" fill="url(#quantumField)" />
-          
-          {/* Collapse center indicator */}
-          {(collapsePhase === 'convergence' || collapsePhase === 'collapse') && (
-            <g>
-              <circle
-                cx="150"
-                cy="100"
-                r="10"
-                fill="none"
-                stroke="#8b5cf6"
-                strokeWidth="2"
-                opacity="0.6"
-                className="animate-ping"
-              />
-              <circle
-                cx="150"
-                cy="100"
-                r="5"
-                fill="#8b5cf6"
-                opacity="0.8"
-              />
-            </g>
-          )}
-          
-          {/* Particles */}
-          {particles.map((particle) => (
-            <circle
-              key={particle.id}
-              cx={particle.x}
-              cy={particle.y}
-              r={particle.size}
-              fill={particle.color}
-              opacity={collapsePhase === 'collapse' ? '0.9' : '0.7'}
-              className={collapsePhase === 'collapse' ? 'animate-pulse' : ''}
-            />
-          ))}
-        </svg>
-        
-        {/* Status overlay */}
-        <div className="absolute bottom-4 left-4 text-xs">
-          <div className="flex items-center space-x-2">
-            <div className={`w-2 h-2 rounded-full ${
-              collapsePhase === 'idle' ? 'bg-slate-500' :
-              collapsePhase === 'preparation' ? 'bg-yellow-400 animate-pulse' :
-              collapsePhase === 'convergence' ? 'bg-blue-400 animate-pulse' :
-              collapsePhase === 'collapse' ? 'bg-purple-400 animate-ping' :
-              'bg-green-400'
-            }`}></div>
-            <span className="text-slate-300 capitalize">
-              {collapsePhase === 'idle' ? 'Ready' : collapsePhase}
-            </span>
+      <div className="relative h-52 bg-slate-950 rounded-lg overflow-hidden flex items-center justify-center">
+        {!appPreview && generationPhase === 'idle' && (
+          <div className="text-center text-slate-400">
+            <Eye className="h-12 w-12 mx-auto mb-2 opacity-50" />
+            <p className="text-sm">Parse an intent to see live preview</p>
           </div>
-        </div>
-        
-        {/* Live preview placeholder */}
-        {collapsePhase === 'materialization' && (
-          <div className="absolute inset-4 bg-slate-800 rounded border border-green-400/30 flex items-center justify-center">
+        )}
+
+        {isGenerating && (
+          <div className="absolute inset-0 flex items-center justify-center bg-slate-950/90">
             <div className="text-center">
-              <Eye className="h-8 w-8 text-green-400 mx-auto mb-2" />
-              <div className="text-sm text-green-400">App Materialized</div>
-              <div className="text-xs text-slate-400">Live preview ready</div>
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-2"></div>
+              <div className="text-sm text-cyan-400 capitalize">
+                {generationPhase}...
+              </div>
             </div>
           </div>
         )}
+
+        {appPreview && (
+          <div className={`${getDeviceClass()} bg-white rounded-lg overflow-hidden shadow-lg transition-all duration-300`}>
+            {/* Mock App Interface */}
+            <div className="h-full flex flex-col">
+              {/* Header */}
+              {appPreview.components.find(c => c.type === 'header') && (
+                <div className="bg-slate-800 text-white p-3 text-sm font-semibold">
+                  {appPreview.components.find(c => c.type === 'header').content}
+                </div>
+              )}
+              
+              {/* Navigation */}
+              {appPreview.components.find(c => c.type === 'nav') && (
+                <div className="bg-slate-700 text-white p-2 flex space-x-2 text-xs">
+                  {appPreview.components.find(c => c.type === 'nav').items.map((item, i) => (
+                    <span key={i} className="px-2 py-1 bg-slate-600 rounded">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              )}
+              
+              {/* Main Content */}
+              <div className="flex-1 p-3 bg-slate-50 overflow-hidden">
+                {/* Dashboard widgets */}
+                {appPreview.components.find(c => c.type === 'dashboard') && (
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    {appPreview.components.find(c => c.type === 'dashboard').widgets.map((widget, i) => (
+                      <div key={i} className="bg-white p-2 rounded shadow text-xs">
+                        <div className="font-semibold text-slate-800">{widget}</div>
+                        <div className="h-4 bg-gradient-to-r from-cyan-200 to-purple-200 rounded mt-1"></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                
+                {/* Table */}
+                {appPreview.components.find(c => c.type === 'table') && (
+                  <div className="bg-white rounded shadow">
+                    <div className="grid grid-cols-4 gap-1 p-2 bg-slate-100 text-xs font-semibold">
+                      {appPreview.components.find(c => c.type === 'table').columns.map((col, i) => (
+                        <div key={i}>{col}</div>
+                      ))}
+                    </div>
+                    {[1, 2, 3].map(row => (
+                      <div key={row} className="grid grid-cols-4 gap-1 p-2 text-xs border-t">
+                        <div>#{row}</div>
+                        <div>Item {row}</div>
+                        <div className="text-green-600">Active</div>
+                        <div>••</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Status indicator */}
+        <div className="absolute bottom-4 left-4 text-xs">
+          <div className="flex items-center space-x-2">
+            <div className={`w-2 h-2 rounded-full ${
+              generationPhase === 'idle' ? 'bg-slate-500' :
+              generationPhase === 'analyzing' ? 'bg-yellow-400 animate-pulse' :
+              generationPhase === 'designing' ? 'bg-blue-400 animate-pulse' :
+              generationPhase === 'rendering' ? 'bg-purple-400 animate-pulse' :
+              'bg-green-400'
+            }`}></div>
+            <span className="text-slate-300 capitalize">
+              {generationPhase === 'idle' ? 'Ready' : 
+               generationPhase === 'complete' ? 'Live Preview Ready' : 
+               generationPhase}
+            </span>
+          </div>
+        </div>
       </div>
     </Card>
   );
