@@ -3,10 +3,11 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, Zap, Monitor, Smartphone, Tablet, GitBranch, Database, Sparkles, RotateCcw } from 'lucide-react';
+import { Eye, Zap, Monitor, Smartphone, Tablet, GitBranch, Database, Sparkles, RotateCcw, BarChart3, Terminal } from 'lucide-react';
 import EvolutionGraph from './EvolutionGraph';
 import ArchiveExplorer from './ArchiveExplorer';
 import GeneratedAppPreview from './GeneratedAppPreview';
+import MetricsPanel from './MetricsPanel';
 import { generateAppCodeWithGemini, evolveAppWithGemini } from '@/services/geminiService';
 
 type DeviceType = 'desktop' | 'tablet' | 'mobile';
@@ -159,14 +160,22 @@ const CollapseVisualizer = ({ activeIntent }) => {
       </div>
 
       <Tabs defaultValue="preview" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 bg-slate-800 border-slate-700">
+        <TabsList className="grid w-full grid-cols-5 bg-slate-800 border-slate-700">
           <TabsTrigger value="preview" className="data-[state=active]:bg-cyan-600">
             <Eye className="h-4 w-4 mr-2" />
             Preview
           </TabsTrigger>
+          <TabsTrigger value="metrics" className="data-[state=active]:bg-green-600">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Metrics
+          </TabsTrigger>
+          <TabsTrigger value="terminal" className="data-[state=active]:bg-green-600">
+            <Terminal className="h-4 w-4 mr-2" />
+            Terminal
+          </TabsTrigger>
           <TabsTrigger value="evolution" className="data-[state=active]:bg-purple-600">
             <GitBranch className="h-4 w-4 mr-2" />
-            Evolution Tree
+            Evolution
           </TabsTrigger>
           <TabsTrigger value="archive" className="data-[state=active]:bg-orange-600">
             <Database className="h-4 w-4 mr-2" />
@@ -229,6 +238,44 @@ const CollapseVisualizer = ({ activeIntent }) => {
                 Generations: {generationHistory.length}
               </div>
             )}
+          </div>
+        </TabsContent>
+
+        <TabsContent value="metrics" className="mt-4">
+          <MetricsPanel />
+        </TabsContent>
+
+        <TabsContent value="terminal" className="mt-4">
+          <div className="bg-slate-900 border-slate-700 rounded-lg p-6">
+            <div className="flex items-center space-x-2 mb-4">
+              <Terminal className="h-5 w-5 text-green-400" />
+              <h3 className="text-lg font-semibold">Sandbox Terminal</h3>
+            </div>
+            <div className="bg-black rounded-lg p-4 font-mono text-sm h-64 overflow-y-auto">
+              <div className="text-green-400">
+                darwin-forge@sandbox:~$ mount_tmpfs("/workspace")<br/>
+                Mounted tmpfs at /workspace (512MiB)<br/>
+                <br/>
+                darwin-forge@sandbox:~$ start_firecracker_vm()<br/>
+                ✓ VM initialized • gVisor sandbox active<br/>
+                ✓ Tools loaded: [git, pytest, lighthouse-ci, vite, bandit]<br/>
+                <br/>
+                darwin-forge@sandbox:~$ load_archive_from_neo4j()<br/>
+                ✓ Loaded 1,247 nodes from evolutionary archive<br/>
+                ✓ Archive size: 487MB / 512MB budget<br/>
+                <br/>
+                {isEvolutionRunning && (
+                  <>
+                    <span className="text-cyan-400">
+                      [EVOLUTION] Selecting parent node via fitness roulette...<br/>
+                      [EVOLUTION] Parent: node_7a3f • fitness: 0.847<br/>
+                      [EVOLUTION] Generating mutation patch...<br/>
+                      <span className="animate-pulse">⚡ LLM.invoke(role=PROPOSE_PATCH) ...</span>
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </TabsContent>
         

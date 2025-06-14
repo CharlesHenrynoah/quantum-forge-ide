@@ -2,11 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { Play, Zap, GitBranch, Code2, Terminal, Eye, Brain, Atom, MessageSquare } from 'lucide-react';
-import MetricsPanel from '@/components/MetricsPanel';
 import IntentParser from '@/components/IntentParser';
 import CollapseVisualizer from '@/components/CollapseVisualizer';
 
@@ -72,50 +69,9 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Right Side - Preview and Metrics */}
-        <div className="flex-1 flex flex-col">
-          
-          {/* Main Preview Area */}
-          <div className="flex-1 p-6">
-            <CollapseVisualizer activeIntent={activeIntent} />
-          </div>
-
-          {/* Bottom Panel - Metrics and Terminal */}
-          <div className="h-80 border-t border-slate-800 p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 overflow-y-auto">
-            <MetricsPanel />
-            
-            <Card className="bg-slate-900/50 border-slate-700 p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Terminal className="h-5 w-5 text-green-400" />
-                <h3 className="text-lg font-semibold">Sandbox Terminal</h3>
-              </div>
-              <div className="bg-black rounded-lg p-4 font-mono text-sm h-48 overflow-y-auto">
-                <div className="text-green-400">
-                  darwin-forge@sandbox:~$ mount_tmpfs("/workspace")<br/>
-                  Mounted tmpfs at /workspace (512MiB)<br/>
-                  <br/>
-                  darwin-forge@sandbox:~$ start_firecracker_vm()<br/>
-                  ✓ VM initialized • gVisor sandbox active<br/>
-                  ✓ Tools loaded: [git, pytest, lighthouse-ci, vite, bandit]<br/>
-                  <br/>
-                  darwin-forge@sandbox:~$ load_archive_from_neo4j()<br/>
-                  ✓ Loaded 1,247 nodes from evolutionary archive<br/>
-                  ✓ Archive size: 487MB / 512MB budget<br/>
-                  <br/>
-                  {isEvolutionRunning && (
-                    <>
-                      <span className="text-cyan-400">
-                        [EVOLUTION] Selecting parent node via fitness roulette...<br/>
-                        [EVOLUTION] Parent: node_7a3f • fitness: 0.847<br/>
-                        [EVOLUTION] Generating mutation patch...<br/>
-                        <span className="animate-pulse">⚡ LLM.invoke(role=PROPOSE_PATCH) ...</span>
-                      </span>
-                    </>
-                  )}
-                </div>
-              </div>
-            </Card>
-          </div>
+        {/* Right Side - Preview */}
+        <div className="flex-1 p-6">
+          <CollapseVisualizer activeIntent={activeIntent} />
         </div>
       </div>
 
