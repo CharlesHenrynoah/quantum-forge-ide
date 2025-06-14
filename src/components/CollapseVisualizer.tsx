@@ -13,13 +13,20 @@ import { generateAppCodeWithGemini, evolveAppWithGemini } from '@/services/gemin
 
 type DeviceType = 'desktop' | 'tablet' | 'mobile';
 
-const CollapseVisualizer = ({ activeIntent }) => {
+const CollapseVisualizer = ({ activeIntent, shouldAutoGenerate }) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationPhase, setGenerationPhase] = useState('idle');
   const [previewDevice, setPreviewDevice] = useState<DeviceType>('desktop');
   const [generatedAppCode, setGeneratedAppCode] = useState('');
   const [isEvolutionRunning, setIsEvolutionRunning] = useState(false);
   const [generationHistory, setGenerationHistory] = useState([]);
+
+  // Auto-generate when triggered from IntentParser
+  useEffect(() => {
+    if (shouldAutoGenerate && activeIntent && !isGenerating) {
+      generatePreview();
+    }
+  }, [shouldAutoGenerate, activeIntent]);
 
   const generatePreview = async () => {
     if (!activeIntent) return;

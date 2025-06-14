@@ -5,9 +5,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Zap, Code2, Sparkles } from 'lucide-react';
-import { parseIntentWithGemini, generateAppCodeWithGemini } from '@/services/geminiService';
+import { parseIntentWithGemini } from '@/services/geminiService';
 
-const IntentParser = ({ onIntentParsed }) => {
+const IntentParser = ({ onIntentParsed, onAutoGenerateApp }) => {
   const [prompt, setPrompt] = useState('');
   const [parsedIntent, setParsedIntent] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -33,9 +33,10 @@ const IntentParser = ({ onIntentParsed }) => {
       onIntentParsed?.(intent);
       console.log('Parsed Intent:', intent);
       
-      // Automatically generate the app after parsing
-      setProcessingStep('Generating app code...');
-      await generateAppCodeWithGemini(intent);
+      // Automatically trigger app generation after parsing
+      setProcessingStep('Generating app preview...');
+      await new Promise(resolve => setTimeout(resolve, 500));
+      onAutoGenerateApp?.(intent);
       
     } catch (error) {
       console.error('Intent parsing failed:', error);
@@ -53,6 +54,7 @@ const IntentParser = ({ onIntentParsed }) => {
       };
       setParsedIntent(fallbackIntent);
       onIntentParsed?.(fallbackIntent);
+      onAutoGenerateApp?.(fallbackIntent);
     } finally {
       setIsProcessing(false);
       setProcessingStep('');

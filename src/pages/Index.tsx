@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +9,17 @@ import CollapseVisualizer from '@/components/CollapseVisualizer';
 const Index = () => {
   const [currentGeneration, setCurrentGeneration] = useState(0);
   const [activeIntent, setActiveIntent] = useState(null);
+  const [shouldAutoGenerate, setShouldAutoGenerate] = useState(false);
+
+  const handleIntentParsed = (intent) => {
+    setActiveIntent(intent);
+    setShouldAutoGenerate(false); // Reset auto-generate flag
+  };
+
+  const handleAutoGenerateApp = (intent) => {
+    setActiveIntent(intent);
+    setShouldAutoGenerate(true); // Trigger auto-generation
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-purple-950 text-white">
@@ -54,13 +64,19 @@ const Index = () => {
           </div>
           
           <div className="flex-1 overflow-y-auto p-4">
-            <IntentParser onIntentParsed={setActiveIntent} />
+            <IntentParser 
+              onIntentParsed={handleIntentParsed} 
+              onAutoGenerateApp={handleAutoGenerateApp}
+            />
           </div>
         </div>
 
         {/* Right Side - Preview */}
         <div className="flex-1 p-6">
-          <CollapseVisualizer activeIntent={activeIntent} />
+          <CollapseVisualizer 
+            activeIntent={activeIntent} 
+            shouldAutoGenerate={shouldAutoGenerate}
+          />
         </div>
       </div>
 
