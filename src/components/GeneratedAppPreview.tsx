@@ -1,5 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
+import * as Babel from '@babel/standalone';
 
 interface GeneratedAppPreviewProps {
   appCode: string;
@@ -14,34 +14,56 @@ const GeneratedAppPreview: React.FC<GeneratedAppPreviewProps> = ({ appCode, devi
     try {
       console.log('Attempting to render code:', appCode.substring(0, 200) + '...');
       
-      // Clean the code before execution
+      // Nettoyage du code généré
       let cleanCode = appCode.trim();
-      
-      // Remove any markdown code blocks if they exist
-      cleanCode = cleanCode.replace(/```(?:typescript|tsx|jsx|javascript)?\s*/g, '');
-      cleanCode = cleanCode.replace(/```\s*$/g, '');
-      
-      // Remove import statements since we're not in a module context
-      cleanCode = cleanCode.replace(/import\s+.*?;/g, '');
-      
-      // Ensure we have a proper React component
-      if (!cleanCode.includes('GeneratedApp')) {
-        throw new Error('No GeneratedApp component found in code');
+      // Supprimer les balises markdown
+      cleanCode = cleanCode.replace(/```[\s\S]*?```/g, '');
+      // Supprimer les imports/exports
+      cleanCode = cleanCode.replace(/import\s+.*?;?/g, '');
+      cleanCode = cleanCode.replace(/export\s+default\s+.*?;?/g, '');
+      // Supprimer les blocs JSON (ex: { ... }) qui ne sont pas du code React
+      cleanCode = cleanCode.replace(/^[{\[].*[}\]]$/gms, '');
+      // Supprimer les lignes vides en début/fin
+      cleanCode = cleanCode.replace(/^\s+|\s+$/g, '');
+      // Robustesse
+      const trimmed = cleanCode.trimStart();
+      if (!trimmed || (!trimmed.startsWith('const GeneratedApp') && !/^<([\s\S]*)>/.test(trimmed))) {
+        // Si le code est vide ou non exploitable, on affiche un composant par défaut
+        setAppComponent(() => () => (
+          <div className="flex flex-col items-center justify-center h-full w-full text-slate-400">
+            <span className="text-2xl mb-2">😕</span>
+            <span>Aucune UI générée par Gemini</span>
+          </div>
+        ));
+        setError(null);
+        return;
       }
-      
-      // Create a function that returns the component
-      // We pass React as a parameter since imports are removed
-      const createComponent = new Function('React', `
-        const { useState, useEffect } = React;
-        ${cleanCode}
-        return GeneratedApp;
-      `);
-      
+      if (trimmed.startsWith('const GeneratedApp')) {
+        // OK
+      } else if (/^<([\s\S]*)>/.test(trimmed)) {
+        cleanCode = `const GeneratedApp = () => (${trimmed});`;
+      }
+      // Transpile avec Babel
+      let transpiled = '';
+      try {
+        transpiled = Babel.transform(cleanCode, { presets: ['react'] }).code;
+      } catch (babelErr) {
+        throw new Error('Erreur Babel lors de la transpilation JSX : ' + babelErr.message);
+      }
+      // Exécution du code transpilé avec les hooks React dans le scope
+      const createComponent = new Function(
+        'React',
+        `
+          const { useState, useEffect, useRef, useContext, useMemo, useCallback, useReducer } = React;
+          ${transpiled};
+          return GeneratedApp;
+        `
+      );
       const Component = createComponent(React);
       setAppComponent(() => Component);
       setError(null);
     } catch (err) {
-      console.error('Failed to create component:', err);
+      console.error('Failed to create component:', err, '\nCode nettoyé :', appCode);
       setError(`Failed to render: ${err.message}`);
       setAppComponent(null);
     }

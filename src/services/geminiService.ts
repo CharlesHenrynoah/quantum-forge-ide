@@ -1,4 +1,3 @@
-
 const GEMINI_API_KEY = 'AIzaSyB_lBRH0ja-p9-8Xzvzv8RfTU6z5QHKRWs';
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
 
@@ -113,34 +112,24 @@ Focus on extracting concrete, actionable information.
 
 export const generateAppCodeWithGemini = async (intent: any) => {
   const prompt = `
-Generate ONLY executable React TypeScript code for this app specification:
+Génère UNIQUEMENT le code d'un composant React fonctionnel nommé "GeneratedApp".
+Règles strictes :
+- Pas d'import, pas d'export, pas de markdown, pas de JSON, pas d'explications, pas de commentaires.
+- Le code doit être autonome, tout doit être dans le composant.
+- Utilise uniquement les hooks React natifs (useState, useEffect si besoin).
+- Utilise Tailwind CSS pour le style.
+- Le code doit commencer par : const GeneratedApp = () => { ... } et finir par };.
+- Retourne seulement ce code, rien d'autre.
+- Ne génère pas d'écran de login, d'authentification ou d'inscription. L'application doit être directement utilisable, sans étape d'identification.
+- L'application doit être intelligente et interactive : elle doit utiliser les entrées de l'utilisateur pour générer des résultats pertinents et dynamiques.
+- Considère que le backend est un agent intelligent généré par Gemini, capable de répondre à toutes les requêtes de l'application de façon pertinente et contextuelle.
+- Simule les appels backend avec des fonctions asynchrones fictives (async function) qui retournent des résultats intelligents adaptés à l'intention de l'utilisateur.
 
-App Name: ${intent.name}
-Features: ${intent.features?.join(', ')}
-Components needed: ${intent.components?.join(', ')}
-UI Spec: ${intent.ui_spec}
-
-IMPORTANT RULES:
-1. Return ONLY valid TypeScript React code, NO explanations or markdown
-2. Component must be named "GeneratedApp" 
-3. Must export as default
-4. Use Tailwind CSS classes for styling
-5. Include all necessary imports (React, useState, etc.)
-6. Create a complete, functional component
-
-Example format:
-import React, { useState } from 'react';
-
-const GeneratedApp = () => {
-  // Component logic here
-  return (
-    <div>
-      // JSX content
-    </div>
-  );
-};
-
-export default GeneratedApp;
+Spécification de l'application :
+Nom : ${intent.name}
+Fonctionnalités : ${intent.features?.join(', ')}
+Composants nécessaires : ${intent.components?.join(', ')}
+UI : ${intent.ui_spec}
 `;
 
   try {
@@ -219,4 +208,57 @@ Generate the improved version:
     console.error('App evolution error:', error);
     return currentCode; // Return original if evolution fails
   }
+};
+
+// AGENT 1 : Génération du contenu (logique métier, structure des données)
+export const generateContentWithGemini = async (intent: any) => {
+  const prompt = `
+Analyse la spécification suivante et génère uniquement la logique métier et la structure des données nécessaires à l'application. Ne génère pas d'UI ni de backend ici.
+
+Spécification :
+Nom : ${intent.name}
+Fonctionnalités : ${intent.features?.join(', ')}
+Composants nécessaires : ${intent.components?.join(', ')}
+UI : ${intent.ui_spec}
+`;
+  return await generateWithGemini(prompt);
+};
+
+// AGENT 2 : Génération du backend (API intelligente simulée)
+export const generateBackendWithGemini = async (intent: any) => {
+  const prompt = `
+Génère uniquement la logique backend simulée pour cette application :
+- Utilise des fonctions asynchrones (async function) pour simuler les appels API.
+- Le backend est un agent intelligent généré par Gemini, il répond toujours de façon pertinente et contextuelle.
+- Ne génère pas d'UI ici.
+
+Spécification :
+Nom : ${intent.name}
+Fonctionnalités : ${intent.features?.join(', ')}
+Composants nécessaires : ${intent.components?.join(', ')}
+UI : ${intent.ui_spec}
+`;
+  return await generateWithGemini(prompt);
+};
+
+// AGENT 3 : Génération de l'UI (moderne, simple, ergonomique)
+export const generateUIWithGemini = async (intent: any) => {
+  const prompt = `
+Génère UNIQUEMENT du code JSX/TSX pour une interface React de type ${intent.name} (ex : dashboard, gestionnaire de tâches, CRM, etc.) qui délègue toute la logique métier à un agent Gemini.
+Règles strictes :
+- Toutes les actions utilisateur (clics, formulaires, etc.) doivent appeler une fonction fictive sendToGemini qui envoie la demande à l'agent Gemini.
+- Les réponses de Gemini sont affichées dans l'UI (tableaux, cartes, notifications, etc.).
+- N'inclus AUCUN texte explicatif, AUCUN markdown, AUCUN import/export, AUCUN backend en dur.
+- Utilise Tailwind CSS pour le style.
+- Le code doit être immédiatement exécutable dans un projet React.
+- L'UI doit ressembler à un vrai logiciel moderne, avec une bonne hiérarchie visuelle, des espacements harmonieux, et au moins un titre, une zone de contenu, et une interaction utilisateur.
+- Ne génère jamais de page vide.
+
+Spécification :
+Nom : ${intent.name}
+Fonctionnalités : ${intent.features?.join(', ')}
+Composants nécessaires : ${intent.components?.join(', ')}
+UI : ${intent.ui_spec}
+`;
+  return await generateWithGemini(prompt);
 };

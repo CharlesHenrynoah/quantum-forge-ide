@@ -1,15 +1,14 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Eye, Zap, Monitor, Smartphone, Tablet, GitBranch, Database, Sparkles, RotateCcw, BarChart3, Terminal } from 'lucide-react';
+import { Eye, Zap, Monitor, Smartphone, Tablet, GitBranch, Database, Sparkles, RotateCcw, BarChart3, Terminal, Code2 } from 'lucide-react';
 import EvolutionGraph from './EvolutionGraph';
 import ArchiveExplorer from './ArchiveExplorer';
 import GeneratedAppPreview from './GeneratedAppPreview';
 import MetricsPanel from './MetricsPanel';
-import { generateAppCodeWithGemini, evolveAppWithGemini } from '@/services/geminiService';
+import { generateContentWithGemini, generateBackendWithGemini, generateUIWithGemini, evolveAppWithGemini } from '@/services/geminiService';
 
 type DeviceType = 'desktop' | 'tablet' | 'mobile';
 
@@ -20,6 +19,9 @@ const CollapseVisualizer = ({ activeIntent, shouldAutoGenerate }) => {
   const [generatedAppCode, setGeneratedAppCode] = useState('');
   const [isEvolutionRunning, setIsEvolutionRunning] = useState(false);
   const [generationHistory, setGenerationHistory] = useState([]);
+  const [generatedContent, setGeneratedContent] = useState('');
+  const [generatedBackend, setGeneratedBackend] = useState('');
+  const [generatedUI, setGeneratedUI] = useState('');
 
   // Auto-generate when triggered from IntentParser
   useEffect(() => {
@@ -30,30 +32,33 @@ const CollapseVisualizer = ({ activeIntent, shouldAutoGenerate }) => {
 
   const generatePreview = async () => {
     if (!activeIntent) return;
-    
     setIsGenerating(true);
     setGenerationPhase('analyzing');
-    
     try {
       setTimeout(() => setGenerationPhase('connecting_gemini'), 1000);
-      
       setTimeout(() => setGenerationPhase('generating_code'), 2000);
-      
-      const appCode = await generateAppCodeWithGemini(activeIntent);
-      
+      // Appel des trois agents Gemini
+      const [content, backend, ui] = await Promise.all([
+        generateContentWithGemini(activeIntent),
+        generateBackendWithGemini(activeIntent),
+        generateUIWithGemini(activeIntent)
+      ]);
+      setGeneratedContent(content);
+      setGeneratedBackend(backend);
+      setGeneratedUI(ui);
+      // Pour la preview, on utilise uniquement le code UI
       setGenerationPhase('rendering');
       setTimeout(() => {
-        setGeneratedAppCode(appCode);
+        setGeneratedAppCode(ui);
         setGenerationHistory(prev => [...prev, {
           id: Date.now(),
           intent: activeIntent,
-          code: appCode,
+          code: ui,
           timestamp: new Date().toISOString()
         }]);
         setGenerationPhase('complete');
         setIsGenerating(false);
       }, 1000);
-      
     } catch (error) {
       console.error('Generation failed:', error);
       setGenerationPhase('error');
@@ -168,10 +173,14 @@ const CollapseVisualizer = ({ activeIntent, shouldAutoGenerate }) => {
       </div>
 
       <Tabs defaultValue="preview" className="w-full">
-        <TabsList className="grid w-full grid-cols-5 bg-slate-800 border-slate-700">
+        <TabsList className="grid w-full grid-cols-6 bg-slate-800 border-slate-700">
           <TabsTrigger value="preview" className="data-[state=active]:bg-cyan-600">
             <Eye className="h-4 w-4 mr-2" />
             Preview
+          </TabsTrigger>
+          <TabsTrigger value="code" className="data-[state=active]:bg-blue-600">
+            <Code2 className="h-4 w-4 mr-2" />
+            Code
           </TabsTrigger>
           <TabsTrigger value="metrics" className="data-[state=active]:bg-green-600">
             <BarChart3 className="h-4 w-4 mr-2" />
@@ -192,60 +201,93 @@ const CollapseVisualizer = ({ activeIntent, shouldAutoGenerate }) => {
         </TabsList>
         
         <TabsContent value="preview" className="mt-4">
-          <div className="relative h-96 bg-slate-950 rounded-lg overflow-hidden flex items-center justify-center">
-            {!generatedAppCode && generationPhase === 'idle' && (
-              <div className="text-center text-slate-400">
-                <Eye className="h-12 w-12 mx-auto mb-2 opacity-50" />
-                <p className="text-sm">Parse an intent to generate app with Gemini AI</p>
-              </div>
-            )}
+          <div className="relative h-[480px] bg-slate-950 rounded-lg overflow-auto flex items-center justify-center">
+            <div className="h-full w-full max-h-full flex items-center justify-center">
+              {!generatedAppCode && generationPhase === 'idle' && (
+                <div className="text-center text-slate-400">
+                  <Eye className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                  <p className="text-sm">Parse an intent to generate app with Gemini AI</p>
+                </div>
+              )}
 
-            {isGenerating && (
-              <div className="absolute inset-0 flex items-center justify-center bg-slate-950/90 z-10">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-2"></div>
-                  <div className="text-sm text-cyan-400 capitalize">
-                    {generationPhase === 'connecting_gemini' && '🧠 Connecting to Gemini AI...'}
-                    {generationPhase === 'generating_code' && '⚡ Generating React Code...'}
-                    {generationPhase === 'analyzing' && '🔍 Analyzing Intent...'}
-                    {generationPhase === 'rendering' && '🎨 Rendering App...'}
-                    {generationPhase === 'evolving' && '🔄 Evolving Application...'}
+              {isGenerating && (
+                <div className="absolute inset-0 flex items-center justify-center bg-slate-950/90 z-10">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-cyan-400 mx-auto mb-2"></div>
+                    <div className="text-sm text-cyan-400 capitalize">
+                      {generationPhase === 'connecting_gemini' && '🧠 Connecting to Gemini AI...'}
+                      {generationPhase === 'generating_code' && '⚡ Generating React Code...'}
+                      {generationPhase === 'analyzing' && '🔍 Analyzing Intent...'}
+                      {generationPhase === 'rendering' && '🎨 Rendering App...'}
+                      {generationPhase === 'evolving' && '🔄 Evolving Application...'}
+                    </div>
                   </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {generatedAppCode && !isGenerating && (
-              <GeneratedAppPreview 
-                appCode={generatedAppCode} 
-                deviceType={previewDevice}
-              />
-            )}
-            
-            {/* Status indicator */}
-            <div className="absolute bottom-4 left-4 text-xs">
+              {generatedAppCode && !isGenerating && (
+                <GeneratedAppPreview 
+                  appCode={generatedAppCode} 
+                  deviceType={previewDevice}
+                />
+              )}
+              
+              {/* Status indicator */}
+              <div className="absolute bottom-4 left-4 text-xs">
+                <div className="flex items-center space-x-2">
+                  <div className={`w-2 h-2 rounded-full ${
+                    generationPhase === 'idle' ? 'bg-slate-500' :
+                    generationPhase === 'error' ? 'bg-red-400' :
+                    generationPhase === 'complete' ? 'bg-green-400' :
+                    'bg-cyan-400 animate-pulse'
+                  }`}></div>
+                  <span className="text-slate-300 capitalize">
+                    {generationPhase === 'idle' ? 'Ready' : 
+                     generationPhase === 'complete' ? 'App Generated by Gemini AI' : 
+                     generationPhase === 'error' ? 'Generation Failed' :
+                     generationPhase}
+                  </span>
+                </div>
+              </div>
+
+              {/* Generation counter */}
+              {generationHistory.length > 0 && (
+                <div className="absolute bottom-4 right-4 text-xs text-slate-400">
+                  Generations: {generationHistory.length}
+                </div>
+              )}
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="code" className="mt-4">
+          <div className="bg-slate-900 border-slate-700 rounded-lg overflow-hidden">
+            <div className="flex items-center justify-between p-4 border-b border-slate-700">
               <div className="flex items-center space-x-2">
-                <div className={`w-2 h-2 rounded-full ${
-                  generationPhase === 'idle' ? 'bg-slate-500' :
-                  generationPhase === 'error' ? 'bg-red-400' :
-                  generationPhase === 'complete' ? 'bg-green-400' :
-                  'bg-cyan-400 animate-pulse'
-                }`}></div>
-                <span className="text-slate-300 capitalize">
-                  {generationPhase === 'idle' ? 'Ready' : 
-                   generationPhase === 'complete' ? 'App Generated by Gemini AI' : 
-                   generationPhase === 'error' ? 'Generation Failed' :
-                   generationPhase}
-                </span>
+                <Code2 className="h-5 w-5 text-blue-400" />
+                <h3 className="text-lg font-semibold">Agent Context</h3>
+                <Badge variant="outline" className="border-blue-400/30 text-blue-400">
+                  React + TSX
+                </Badge>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs"
+                onClick={() => navigator.clipboard.writeText(generatedUI)}
+              >
+                Copy UI to Clipboard
+              </Button>
+            </div>
+            <div className="px-4 pt-2 pb-0 text-xs text-slate-400">
+              Ce contexte agentique est utilisé pour piloter l'agent Gemini : toute la logique métier et le backend sont simulés, l'UI sert d'interface à l'agent.
+            </div>
+            <div className="relative grid grid-cols-1 gap-0">
+              <div className="p-4">
+                <h4 className="text-blue-300 font-bold mb-2">Contexte métier</h4>
+                <pre className="text-xs font-mono whitespace-pre-wrap break-words text-slate-300 max-h-[300px] overflow-auto bg-slate-950 rounded-lg p-2">{generatedContent || '// Pas de contenu généré'}</pre>
               </div>
             </div>
-
-            {/* Generation counter */}
-            {generationHistory.length > 0 && (
-              <div className="absolute bottom-4 right-4 text-xs text-slate-400">
-                Generations: {generationHistory.length}
-              </div>
-            )}
           </div>
         </TabsContent>
 
