@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import EvolutionGraph from './EvolutionGraph';
 import ArchiveExplorer from './ArchiveExplorer';
 import GeneratedAppPreview from './GeneratedAppPreview';
 import MetricsPanel from './MetricsPanel';
-import { generateContentWithGemini, generateBackendWithGemini, generateUIWithGemini, evolveAppWithGemini } from '@/services/geminiService';
+import { generateWithGemini, generateUIWithGemini } from '@/services/geminiService';
 import { Agent, GenerationPhase } from '@/types/Agent';
 import { AgentFactory } from '@/services/AgentFactory';
 
@@ -44,16 +43,20 @@ const CollapseVisualizer: React.FC<CollapseVisualizerProps> = ({ activeAgent }) 
       setTimeout(() => setGenerationPhase({ phase: 'connecting_gemini', message: 'Connecting to Gemini AI...' }), 1000);
       setTimeout(() => setGenerationPhase({ phase: 'generating_code', message: 'Generating with specialized agents...' }), 2000);
       
-      // Orchestration des trois agents Gemini spécialisés
-      const [businessLogic, simulatedBackend, generatedUI] = await Promise.all([
-        generateContentWithGemini(agent.rawIntent),
-        generateBackendWithGemini(agent.rawIntent),
-        generateUIWithGemini(agent.rawIntent)
-      ]);
+      // Generate business logic with Gemini
+      const businessLogicPrompt = `Generate business logic for: ${agent.rawIntent.name}. Features: ${agent.rawIntent.features?.join(', ')}`;
+      const businessLogic = await generateWithGemini(businessLogicPrompt);
+      
+      // Generate simulated backend with Gemini
+      const backendPrompt = `Generate simulated backend functions for: ${agent.rawIntent.name}. Features: ${agent.rawIntent.features?.join(', ')}`;
+      const simulatedBackend = await generateWithGemini(backendPrompt);
+      
+      // Generate UI with the specialized UI function
+      const generatedUI = await generateUIWithGemini(agent.rawIntent);
       
       setGenerationPhase({ phase: 'rendering', message: 'Updating Agent context...' });
       
-      // Mise à jour du contexte de l'Agent
+      // Update Agent context
       const updatedAgent = AgentFactory.updateAgentContext(agent, {
         businessLogic,
         simulatedBackend,
@@ -81,8 +84,8 @@ const CollapseVisualizer: React.FC<CollapseVisualizerProps> = ({ activeAgent }) 
     setGenerationPhase({ phase: 'analyzing', message: 'Evolving Agent...' });
     
     try {
-      const evolutionPrompt = "Improve the UI design, add more interactive elements, and enhance the user experience";
-      const evolvedUI = await evolveAppWithGemini(currentAgent.context.generatedUI, evolutionPrompt);
+      const evolutionPrompt = `Improve this React component UI design, add more interactive elements, and enhance the user experience. Current code: ${currentAgent.context.generatedUI}`;
+      const evolvedUI = await generateWithGemini(evolutionPrompt);
       
       const evolvedAgent = AgentFactory.updateAgentContext(currentAgent, {
         generatedUI: evolvedUI
