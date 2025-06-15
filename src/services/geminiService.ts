@@ -244,21 +244,157 @@ UI : ${intent.ui_spec}
 // AGENT 3 : Génération de l'UI (moderne, simple, ergonomique)
 export const generateUIWithGemini = async (intent: any) => {
   const prompt = `
-Génère UNIQUEMENT du code JSX/TSX pour une interface React de type ${intent.name} (ex : dashboard, gestionnaire de tâches, CRM, etc.) qui délègue toute la logique métier à un agent Gemini.
-Règles strictes :
-- Toutes les actions utilisateur (clics, formulaires, etc.) doivent appeler une fonction fictive sendToGemini qui envoie la demande à l'agent Gemini.
-- Les réponses de Gemini sont affichées dans l'UI (tableaux, cartes, notifications, etc.).
-- N'inclus AUCUN texte explicatif, AUCUN markdown, AUCUN import/export, AUCUN backend en dur.
-- Utilise Tailwind CSS pour le style.
-- Le code doit être immédiatement exécutable dans un projet React.
-- L'UI doit ressembler à un vrai logiciel moderne, avec une bonne hiérarchie visuelle, des espacements harmonieux, et au moins un titre, une zone de contenu, et une interaction utilisateur.
-- Ne génère jamais de page vide.
+Génère un composant React appelé "GeneratedApp" pour: ${intent.name}
 
-Spécification :
-Nom : ${intent.name}
-Fonctionnalités : ${intent.features?.join(', ')}
-Composants nécessaires : ${intent.components?.join(', ')}
-UI : ${intent.ui_spec}
+Règles STRICTES:
+- Code React/JSX uniquement
+- Commence par: const GeneratedApp = () => {
+- Termine par: }; return GeneratedApp;
+- Utilise Tailwind CSS
+- Pas d'imports, pas d'exports
+- Interface interactive avec des boutons et formulaires
+- Fonctionnalités: ${intent.features?.join(', ') || 'Interface basique'}
+
+Exemple de structure:
+const GeneratedApp = () => {
+  const [data, setData] = useState([]);
+  
+  return (
+    <div className="min-h-screen bg-gray-100 p-6">
+      <h1 className="text-3xl font-bold mb-6">${intent.name}</h1>
+      {/* Interface interactive ici */}
+    </div>
+  );
+};
+
+return GeneratedApp;
 `;
-  return await generateWithGemini(prompt);
+
+  try {
+    const response = await generateWithGemini(prompt);
+    let cleanCode = response.trim();
+    
+    // Nettoyage plus agressif
+    cleanCode = cleanCode.replace(/```[\s\S]*?```/g, '');
+    cleanCode = cleanCode.replace(/import\s+.*?;?/g, '');
+    cleanCode = cleanCode.replace(/export\s+.*?;?/g, '');
+    cleanCode = cleanCode.trim();
+    
+    // Vérification et fallback
+    if (!cleanCode || !cleanCode.includes('const GeneratedApp')) {
+      console.log('Gemini n\'a pas généré de code valide, utilisation du fallback');
+      return generateFallbackUI(intent);
+    }
+    
+    console.log('Generated UI code:', cleanCode.substring(0, 200) + '...');
+    return cleanCode;
+  } catch (error) {
+    console.error('UI generation error:', error);
+    return generateFallbackUI(intent);
+  }
+};
+
+// Fonction de fallback qui génère toujours une UI valide
+const generateFallbackUI = (intent: any) => {
+  return `
+const GeneratedApp = () => {
+  const [items, setItems] = useState([]);
+  const [newItem, setNewItem] = useState('');
+
+  const addItem = () => {
+    if (newItem.trim()) {
+      setItems([...items, { id: Date.now(), text: newItem, status: 'active' }]);
+      setNewItem('');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">
+          ${intent.name || 'Application Générée'}
+        </h1>
+        
+        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+          <h2 className="text-2xl font-semibold mb-4">Ajouter un élément</h2>
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={newItem}
+              onChange={(e) => setNewItem(e.target.value)}
+              placeholder="Tapez quelque chose..."
+              className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <button
+              onClick={addItem}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              Ajouter
+            </button>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">Liste des éléments</h3>
+            <div className="space-y-2">
+              {items.length === 0 ? (
+                <p className="text-gray-500">Aucun élément ajouté</p>
+              ) : (
+                items.map(item => (
+                  <div key={item.id} className="p-3 bg-gray-50 rounded border">
+                    {item.text}
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">Statistiques</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span>Total:</span>
+                <span className="font-bold">{items.length}</span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div 
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: Math.min(100, items.length * 10) + '%' }}
+                ></div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-lg shadow-lg p-6">
+            <h3 className="text-xl font-semibold mb-4 text-gray-800">Actions</h3>
+            <div className="space-y-2">
+              <button 
+                onClick={() => setItems([])}
+                className="w-full px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+              >
+                Vider la liste
+              </button>
+              <button 
+                onClick={() => console.log('Données:', items)}
+                className="w-full px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+              >
+                Afficher dans la console
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="mt-6 text-center">
+          <p className="text-gray-600">
+            Fonctionnalités: ${intent.features?.join(', ') || 'Interface interactive de base'}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+return GeneratedApp;
+  `;
 };
