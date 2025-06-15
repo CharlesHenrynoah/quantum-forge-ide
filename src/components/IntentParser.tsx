@@ -6,10 +6,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Brain, Zap, Code2, Sparkles } from 'lucide-react';
 import { parseIntentWithGemini } from '@/services/geminiService';
+import { AgentFactory } from '@/services/AgentFactory';
+import { Agent, AgentIntent } from '@/types/Agent';
 
-const IntentParser = ({ onIntentParsed, onAutoGenerateApp }) => {
+interface IntentParserProps {
+  onAgentCreated: (agent: Agent) => void;
+}
+
+const IntentParser: React.FC<IntentParserProps> = ({ onAgentCreated }) => {
   const [prompt, setPrompt] = useState('');
-  const [parsedIntent, setParsedIntent] = useState(null);
+  const [parsedIntent, setParsedIntent] = useState<AgentIntent | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState('');
 
@@ -26,25 +32,28 @@ const IntentParser = ({ onIntentParsed, onAutoGenerateApp }) => {
       setProcessingStep('Generating DSL with Gemini...');
       const intent = await parseIntentWithGemini(prompt);
       
-      setProcessingStep('Finalizing intent parsing...');
+      setProcessingStep('Creating Agent object...');
       await new Promise(resolve => setTimeout(resolve, 500));
       
       setParsedIntent(intent);
-      onIntentParsed?.(intent);
-      console.log('Parsed Intent:', intent);
       
-      // Automatically trigger app generation after parsing
-      setProcessingStep('Generating app preview...');
+      // Création de l'objet Agent
+      const agent = AgentFactory.createAgent(intent, prompt);
+      console.log('Agent created:', agent);
+      
+      setProcessingStep('Agent ready for generation...');
       await new Promise(resolve => setTimeout(resolve, 500));
-      onAutoGenerateApp?.(intent);
+      
+      // Transmission de l'Agent au CollapseVisualizer
+      onAgentCreated(agent);
       
     } catch (error) {
       console.error('Intent parsing failed:', error);
-      // Fallback to basic parsing if Gemini fails
-      const fallbackIntent = {
+      // Fallback Agent
+      const fallbackIntent: AgentIntent = {
         name: 'Generated App',
         entities: ['User', 'Data'],
-        features: ['CRUD Operations', 'Authentication'],
+        features: ['CRUD Operations', 'Dashboard'],
         ui_spec: 'Modern interface with dark theme',
         performance_budget: '< 250ms TTFB',
         security_level: 'standard',
@@ -52,9 +61,10 @@ const IntentParser = ({ onIntentParsed, onAutoGenerateApp }) => {
         components: ['Dashboard', 'Form'],
         tech_stack: ['React', 'Tailwind', 'TypeScript']
       };
+      
+      const fallbackAgent = AgentFactory.createAgent(fallbackIntent, prompt);
       setParsedIntent(fallbackIntent);
-      onIntentParsed?.(fallbackIntent);
-      onAutoGenerateApp?.(fallbackIntent);
+      onAgentCreated(fallbackAgent);
     } finally {
       setIsProcessing(false);
       setProcessingStep('');
@@ -88,7 +98,7 @@ const IntentParser = ({ onIntentParsed, onAutoGenerateApp }) => {
           {isProcessing ? (
             <>
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              {processingStep || 'Generating App...'}
+              {processingStep || 'Creating Agent...'}
             </>
           ) : (
             <>
@@ -102,49 +112,19 @@ const IntentParser = ({ onIntentParsed, onAutoGenerateApp }) => {
           <div className="mt-4 space-y-3">
             <div className="flex items-center space-x-2">
               <Code2 className="h-4 w-4 text-green-400" />
-              <span className="text-sm font-medium text-green-400">Intent DSL Generated</span>
+              <span className="text-sm font-medium text-green-400">Agent structuré généré</span>
             </div>
             
             <div className="bg-slate-800 rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-300">App Name:</span>
+                <span className="text-sm text-slate-300">Agent Name:</span>
                 <Badge variant="outline" className="border-cyan-400/30 text-cyan-400 text-xs">
                   {parsedIntent.name}
                 </Badge>
               </div>
               
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-300">Complexity:</span>
-                <div className="flex items-center space-x-1">
-                  {Array.from({ length: 10 }, (_, i) => (
-                    <div
-                      key={i}
-                      className={`w-1.5 h-1.5 rounded-full ${
-                        i < parsedIntent.estimated_complexity 
-                          ? 'bg-gradient-to-r from-green-400 to-yellow-400' 
-                          : 'bg-slate-600'
-                      }`}
-                    />
-                  ))}
-                  <span className="text-xs text-slate-400 ml-2">
-                    {parsedIntent.estimated_complexity}/10
-                  </span>
-                </div>
-              </div>
-              
               <div className="space-y-2">
-                <span className="text-sm text-slate-300">Features:</span>
-                <div className="flex flex-wrap gap-1">
-                  {parsedIntent.features?.map((feature, i) => (
-                    <Badge key={i} variant="secondary" className="text-xs bg-purple-900/30 text-purple-300">
-                      {feature}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <span className="text-sm text-slate-300">Components:</span>
+                <span className="text-sm text-slate-300">UI Components:</span>
                 <div className="flex flex-wrap gap-1">
                   {parsedIntent.components?.map((component, i) => (
                     <Badge key={i} variant="secondary" className="text-xs bg-blue-900/30 text-blue-300">
@@ -152,6 +132,11 @@ const IntentParser = ({ onIntentParsed, onAutoGenerateApp }) => {
                     </Badge>
                   ))}
                 </div>
+              </div>
+
+              <div className="text-xs text-slate-400 mt-2">
+                Layout: {parsedIntent.estimated_complexity > 7 ? 'Complex' : 'Simple'} • 
+                Contexte métier: AI chat
               </div>
             </div>
           </div>

@@ -1,24 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+
+import React, { useState } from 'react';
 import { Badge } from '@/components/ui/badge';
-import { Play, Zap, GitBranch, Code2, Terminal, Eye, Brain, Atom, MessageSquare } from 'lucide-react';
+import { Brain, MessageSquare } from 'lucide-react';
 import IntentParser from '@/components/IntentParser';
 import CollapseVisualizer from '@/components/CollapseVisualizer';
+import { Agent } from '@/types/Agent';
 
 const Index = () => {
   const [currentGeneration, setCurrentGeneration] = useState(0);
-  const [activeIntent, setActiveIntent] = useState(null);
-  const [shouldAutoGenerate, setShouldAutoGenerate] = useState(false);
+  const [activeAgent, setActiveAgent] = useState<Agent | null>(null);
 
-  const handleIntentParsed = (intent) => {
-    setActiveIntent(intent);
-    setShouldAutoGenerate(false); // Reset auto-generate flag
-  };
-
-  const handleAutoGenerateApp = (intent) => {
-    setActiveIntent(intent);
-    setShouldAutoGenerate(true); // Trigger auto-generation
+  const handleAgentCreated = (agent: Agent) => {
+    setActiveAgent(agent);
+    setCurrentGeneration(prev => prev + 1);
+    console.log('New Agent received:', agent);
   };
 
   return (
@@ -51,7 +46,7 @@ const Index = () => {
       {/* Main Interface */}
       <div className="flex h-[calc(100vh-120px)]">
         
-        {/* Left Sidebar - Chat Interface */}
+        {/* Left Sidebar - Agent Creation */}
         <div className="w-80 bg-slate-950/30 border-r border-slate-800 flex flex-col">
           <div className="p-4 border-b border-slate-800">
             <div className="flex items-center space-x-2">
@@ -64,19 +59,13 @@ const Index = () => {
           </div>
           
           <div className="flex-1 overflow-y-auto p-4">
-            <IntentParser 
-              onIntentParsed={handleIntentParsed} 
-              onAutoGenerateApp={handleAutoGenerateApp}
-            />
+            <IntentParser onAgentCreated={handleAgentCreated} />
           </div>
         </div>
 
-        {/* Right Side - Preview */}
+        {/* Right Side - Agent Visualization */}
         <div className="flex-1 p-6">
-          <CollapseVisualizer 
-            activeIntent={activeIntent} 
-            shouldAutoGenerate={shouldAutoGenerate}
-          />
+          <CollapseVisualizer activeAgent={activeAgent} />
         </div>
       </div>
 
@@ -96,6 +85,12 @@ const Index = () => {
               <div className="w-2 h-2 bg-purple-400 rounded-full"></div>
               <span>Neo4j Archive: Connected</span>
             </div>
+            {activeAgent && (
+              <div className="flex items-center space-x-2">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse"></div>
+                <span>Agent: {activeAgent.id.split('_')[1]}</span>
+              </div>
+            )}
           </div>
           <div className="text-slate-400">
             Memory: 487MB/512MB • CPU: 23% • Network: 1.2MB/s
