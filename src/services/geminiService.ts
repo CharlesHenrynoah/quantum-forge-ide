@@ -249,7 +249,7 @@ Génère un composant React appelé "GeneratedApp" pour: ${intent.name}
 Règles STRICTES:
 - Code React/JSX uniquement
 - Commence par: const GeneratedApp = () => {
-- Termine par: }; return GeneratedApp;
+- Termine par: };
 - Utilise Tailwind CSS
 - Pas d'imports, pas d'exports
 - Interface interactive avec des boutons et formulaires
@@ -266,8 +266,6 @@ const GeneratedApp = () => {
     </div>
   );
 };
-
-return GeneratedApp;
 `;
 
   try {
@@ -296,8 +294,7 @@ return GeneratedApp;
 
 // Fonction de fallback qui génère toujours une UI valide
 const generateFallbackUI = (intent: any) => {
-  return `
-const GeneratedApp = () => {
+  return `const GeneratedApp = () => {
   const [items, setItems] = useState([]);
   const [newItem, setNewItem] = useState('');
 
@@ -393,8 +390,5 @@ const GeneratedApp = () => {
       </div>
     </div>
   );
-};
-
-return GeneratedApp;
-  `;
+};`;
 };
