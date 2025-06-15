@@ -28,11 +28,18 @@ const GeneratedAppPreview: React.FC<GeneratedAppPreviewProps> = ({ appCode, devi
       // Robustesse
       const trimmed = cleanCode.trimStart();
       if (!trimmed || (!trimmed.startsWith('const GeneratedApp') && !/^<([\s\S]*)>/.test(trimmed))) {
-        // Si le code est vide ou non exploitable, on affiche un composant par défaut
+        // Si le code est vide ou non exploitable, on affiche une UI de test par défaut
         setAppComponent(() => () => (
           <div className="flex flex-col items-center justify-center h-full w-full text-slate-400">
-            <span className="text-2xl mb-2">😕</span>
-            <span>Aucune UI générée par Gemini</span>
+            <span className="text-2xl mb-2">✨</span>
+            <span>UI de test par défaut : Gemini n'a rien généré.<br/>Essayez de régénérer ou de modifier votre prompt.</span>
+            <div className="mt-4 p-4 bg-slate-800 rounded-lg text-left text-xs text-slate-300 max-w-xs">
+              <b>Exemple :</b>
+              <pre className="whitespace-pre-wrap break-words">Dashboard
+- Liste de tâches
+- Statistiques
+- Utilisateurs</pre>
+            </div>
           </div>
         ));
         setError(null);
